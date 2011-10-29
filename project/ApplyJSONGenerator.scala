@@ -14,14 +14,14 @@ object ApplyJSON {
     protected def func: A => B
     def `<$>`[M[_] : Functor](arg: M[A]): M[B] = arg map func
   }
-  implicit def `pimpHaskellStyle<$>`[A, B](f: A => B): `HaskellStyle<$>`[A, B] = 
+  private implicit def `pimpHaskellStyle<$>`[A, B](f: A => B): `HaskellStyle<$>`[A, B] = 
     new `HaskellStyle<$>`[A, B] { override def func = f }
   
   trait `HaskellStyle<*>`[M[_], A, B] {
     protected def func: M[A => B]
     def `<*>`(arg: M[A])(implicit a: Apply[M]): M[B] = a(func, arg)
   }
-  implicit def `pimpHaskellStyle<*>`[M[_], A, B](f: M[A => B]): `HaskellStyle<*>`[M, A, B] = 
+  private implicit def `pimpHaskellStyle<*>`[M[_], A, B](f: M[A => B]): `HaskellStyle<*>`[M, A, B] = 
     new `HaskellStyle<*>`[M, A, B] { override def func = f }  
 """+(2 to 22 map generateApplyJsonSingle mkString "\n")+"""
 }
