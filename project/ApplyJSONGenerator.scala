@@ -14,15 +14,15 @@ object ApplyJSON {
     protected def func: A => B
     def `<$>`[M[_] : Functor](arg: M[A]): M[B] = arg map func
   }
-  implicit def `pimpHaskellStyle<$>`[A, B](f: A => B): `HaskellStyle<$>`[A, B] = 
+  implicit def `pimpHaskellStyle<$>`[A, B](f: A => B): `HaskellStyle<$>`[A, B] =
     new `HaskellStyle<$>`[A, B] { override def func = f }
-  
+
   trait `HaskellStyle<*>`[M[_], A, B] {
     protected def func: M[A => B]
     def `<*>`(arg: M[A])(implicit a: Apply[M]): M[B] = a(func, arg)
   }
-  implicit def `pimpHaskellStyle<*>`[M[_], A, B](f: M[A => B]): `HaskellStyle<*>`[M, A, B] = 
-    new `HaskellStyle<*>`[M, A, B] { override def func = f }  
+  implicit def `pimpHaskellStyle<*>`[M[_], A, B](f: M[A => B]): `HaskellStyle<*>`[M, A, B] =
+    new `HaskellStyle<*>`[M, A, B] { override def func = f }
 """+(2 to 22 map generateApplyJsonSingle mkString "\n")+"""
 }
 """
@@ -30,7 +30,7 @@ object ApplyJSON {
     IO.write(file, source)
     Seq(file)
   }
- 
+
   private def generateApplyJsonSingle(arity: Int) = {
     val lowerAlpha = 'a' until ('a' + arity).toChar
     val upperAlpha = lowerAlpha map {_.toUpper}
@@ -38,12 +38,12 @@ object ApplyJSON {
     val parameters = lowerAlpha map {c => c + ": JValue => Result[" + c.toUpper + "]"} mkString ", "
     val applicByBuilder = lowerAlpha map (_ + "(json)") mkString " |@| "
     val applicByCurried = lowerAlpha map (_ + "(json)") mkString " <*> "
-    
+
     val funcBody = if (arity <= 12)
       "("+applicByBuilder+")(z)"
     else
       "z.curried `<$>` "+applicByCurried
-    
+
       <qq>
   implicit def Func{arity}ToJSON[{typeParameters}, Ret](z: ({upperAlpha mkString ", "}) => Ret) = new &#123;
     def applyJSON({parameters}): JValue => Result[Ret] =

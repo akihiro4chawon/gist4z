@@ -14,7 +14,7 @@ trait CaseClassGenerator {
     val xls = (xlsdir / "template" / "classes.xls").asFile
     val fis = new java.io.FileInputStream(xls)
     val caseClasses = (new XLSBeans).load(fis, classOf[CaseClasses])
-    
+
     val packageFile = (dir / "gist4z" / "json" / "GeneratedJSON.scala").asFile
     def packageSource(caseClassses: CaseClasses) = """
 package gist4z.objects
@@ -25,21 +25,21 @@ import net.liftweb.json._
 import net.liftweb.json.scalaz.JsonScalaz._
 import gist4z.json._
 import gist4z.json.ApplyJSON._
-      
+
 trait GeneratedJSON {
 """+(caseClasses.caseClassTableList map {_.sjsonDecl} mkString "\n")+"""
 }
 """
 
-    def objectSource(caseClass: CaseClass) = 
+    def objectSource(caseClass: CaseClass) =
       "package gist4z.objects\n"+caseClass.scalaDecl
     def objectFile(caseClass: CaseClass) =
       (dir / "gist4z" / "objects" / (caseClass.className+".scala")).asFile
-    
+
     IO.write(packageFile, packageSource(caseClasses))
     for (caseClass <- caseClasses.caseClassTableList)
       IO.write(objectFile(caseClass), objectSource(caseClass))
-      
+
     packageFile +: (caseClasses.caseClassTableList map objectFile)
   }
 }
@@ -55,7 +55,7 @@ class CaseClass {
   var className: String = _
   @(HorizontalRecords @beanSetter)(tableLabel="フィールド一覧", recordClass=classOf[Field], bottom=2) @BeanProperty
   var fields: JList[Field] = _
-  
+
 //  def scalaDecl = fields.map{_.scalaDecl}.mkString("case class "+className+" {\n  ", "\n  ", "\n}\n")
   def scalaDecl = fields.map{_.scalaDecl}.mkString("case class "+className+"(\n  ", ",\n  ", ")\n")
   def sjsonDecl = """
@@ -70,10 +70,10 @@ class Field {
   var fieldName: String = _
   @(Column @beanSetter)(columnName="型名") @BeanProperty
   var typeName: String = _
-  
+
   def valName: String =
     "_.".r replaceAllIn(fieldName, _.matched.tail.toUpperCase)
-  
+
   def scalaDecl = "val "+valName+" : "+typeName
 }
 
