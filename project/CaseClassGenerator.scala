@@ -53,14 +53,30 @@ class CaseClasses {
 class CaseClass {
   @(LabelledCell @beanSetter)(label="クラス名", `type`=LabelledCellType.Right) @BeanProperty
   var className: String = _
+  @(LabelledCell @beanSetter)(label="JSON", `type`=LabelledCellType.Right) @BeanProperty
+  var json: String = _
   @(HorizontalRecords @beanSetter)(tableLabel="フィールド一覧", recordClass=classOf[Field], bottom=2) @BeanProperty
   var fields: JList[Field] = _
   
 //  def scalaDecl = fields.map{_.scalaDecl}.mkString("case class "+className+" {\n  ", "\n  ", "\n}\n")
   def scalaDecl = fields.map{_.scalaDecl}.mkString("case class "+className+"(\n  ", ",\n  ", ")\n")
-  def sjsonDecl = """
+  def sjsonDecl = json.toLowerCase match {
+    case "rw" | "wr" => sjsonrDecl + sjsonwDecl
+    case "r" => sjsonrDecl
+    case "w" => sjsonwDecl
+    case "" => ""
+  }
+  
+  def sjsonrDecl = """
   implicit def """+className+"JSONR: JSONR["+className+"""] =
      """+className+".applyJSON("+fields.map{"field(\""+_.fieldName+"\")"}.mkString(", ")+")"
+     
+  private def pair = fields map {f => <qq>("{f.fieldName}" -> toJSON(a.{f.valName}))</qq>.text}
+  def sjsonwDecl = """
+  implicit def """+className+"JSONW: JSONW["+className+"""] = new JSONW["""+className+"""] {
+    def write(a: """+className+""") = 
+      """+pair.mkString("makeObj(", " :: ", " :: Nil)")+"""
+  }"""
 }
 
 class Field {
