@@ -13,6 +13,9 @@ import gist4z.objects._
 import gist4z.json._
 import gist4z.api._
 
+
+// TODO catch thrown exception by dispatch and wrap with Validation
+
 // Gists API
 trait Gists {
   // List a user’s gists:
@@ -50,27 +53,28 @@ trait Gists {
   def edit(gistCreate: GistCreate)(implicit auth: SomeAuth) =
     patch[ExtGist](_/"gists", toJSON(gistCreate))
 
-  // TODO fix to handle status code
   // Star a gist
   // PUT /gists/:id/star
-  def star(id: String)(implicit auth: SomeAuth): Unit = 
-    http(auth((apiRoot/"gists"/id/"star").PUT) >:> identity)
+  def star(id: String)(implicit auth: SomeAuth) = 
+    http(auth((apiRoot/"gists"/id/"star").PUT) >|)
 
-  // TODO fix to handle status code
   // Unstar a gist 
   // DELETE /gists/:id/star
-  def unstar(id: String)(implicit auth: SomeAuth): Unit = 
-    http(auth((apiRoot/"gists"/id/"star").DELETE) >:> identity)
+  def unstar(id: String)(implicit auth: SomeAuth) = 
+    http(auth((apiRoot/"gists"/id/"star").DELETE) >|)
     
-  // TODO distinct "Gist not found" from "Star not found"
   // Check if a gist is starred
   // GET /gists/:id/star
   def isStarred(id: String)(implicit auth: SomeAuth): Validation[Exception, Boolean] =
     http x auth(apiRoot/"gists"/id/"star") >:+ { (headers, req) =>
-      (headers get "status") flatMap {_.headOption} collect {_ take 3 match {
-        case "204" => req >> {_ => true.success[Exception]}
-        case "404" => req >> {_ => false.success[Exception]}
-      }} getOrElse {req >> { _ => (new Exception("Unknown error: " + headers)).fail[Boolean]}}
+      (headers get "status") flatMap {_.headOption} map {_ take 3} collect {
+        case "204" => Handler(req, (_, _, _) => true.success[Exception])
+        case "404" => req >- { str =>
+          fromJSON[ApiErrorMessage](parse(str)).fold(
+              _ => false.success[Exception], // "Star Not Found"
+              m => new StatusCode(404, m.message+": "+id).fail[Boolean]) // "Gist Not Found"
+        }
+      } getOrElse {req >> { _ => (new Exception("Unknown error: " + headers)).fail[Boolean]}}
     }
 
   // Fork a gist
@@ -80,6 +84,6 @@ trait Gists {
     
   // Delete a gist
   // DELETE /gists/:id
-  def delete(id: String)(implicit auth: SomeAuth): Unit = 
-    http(auth(apiRoot/"gists"/id).DELETE >:> identity)
+  def delete(id: String)(implicit auth: SomeAuth) = 
+    http(auth(apiRoot/"gists"/id).DELETE >|)
 }
