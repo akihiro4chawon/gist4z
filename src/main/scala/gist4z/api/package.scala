@@ -15,6 +15,9 @@ package object api {
   
   def http = new Http
   
+  def jsonToString(json: JValue): String =
+    Printer.compact(JsonAST.render(json))
+  
   def get[A](endpoint: Request => Request, params: QueryParam[_]*)(
       implicit auth: Auth, jsonr: JSONR[A]): Result[A] = {
     fromJSON[A](parse(http(auth(endpoint(apiRoot)) as_str)))
@@ -27,7 +30,7 @@ package object api {
   
   def post[A](endpoint: Request => Request, json: JValue)(
       implicit auth: Auth, jsonr: JSONR[A]): Result[A] = {
-    fromJSON[A](parse(http(auth(endpoint(apiRoot)) << (json.toString) as_str)))
+    fromJSON[A](parse(http(auth(endpoint(apiRoot)) << jsonToString(json) as_str)))
   }
   
   def postNothing[A](endpoint: Request => Request)(
