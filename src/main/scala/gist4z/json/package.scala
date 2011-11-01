@@ -19,6 +19,17 @@ package object json extends GeneratedJSON {
     makeObj(files map { file => file.filename -> toJSON(Map("content" -> file.content))})
   }
   
+  // Yields empty list instead of Failure when given JValue is JNothing.
+  // A List can be empty, unlike NonEmptyList.
+  implicit def listJSONR[A: JSONR]: JSONR[List[A]] = new JSONR[List[A]] {
+    def read(json: JValue) = json match {
+      case JArray(xs) => 
+        xs.map(fromJSON[A]).sequence[PartialApply1Of2[ValidationNEL, Error]#Apply, A]
+      case JNothing => List().success
+      case x => UnexpectedJSONError(x, classOf[JArray]).fail.liftFailNel
+    }
+  }
+  
   private def jsonr[A](f: JValue => Result[A]): JSONR[A] = new JSONR[A] {
     def read(jv: JValue) = f(jv)
   }
