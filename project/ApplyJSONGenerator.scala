@@ -23,7 +23,7 @@ object ApplyJSON {
   }
   private implicit def `pimpHaskellStyle<*>`[M[_], A, B](f: M[A => B]): `HaskellStyle<*>`[M, A, B] = 
     new `HaskellStyle<*>`[M, A, B] { override def func = f }  
-"""+(2 to 22 map generateApplyJsonSingle mkString "\n")+"""
+"""+(1 to 22 map generateApplyJsonSingle mkString "\n")+"""
 }
 """
     val file = (dir / "gist4z" / "json" / "ApplyJSON.scala").asFile
@@ -39,7 +39,9 @@ object ApplyJSON {
     val applicByBuilder = lowerAlpha map (_ + "(json)") mkString " |@| "
     val applicByCurried = lowerAlpha map (_ + "(json)") mkString " <*> "
     
-    val funcBody = if (arity <= 12)
+    val funcBody = if (arity == 1)
+      applicByBuilder+" map z"
+    else if (arity <= 12)
       "("+applicByBuilder+")(z)"
     else
       "z.curried `<$>` "+applicByCurried
