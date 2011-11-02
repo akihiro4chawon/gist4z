@@ -12,12 +12,9 @@ import dispatch._
 package object api {
   val apiRoot = :/("api.github.com").secure
   
-  def http[T](f: Http => T): T = {
-    val h = new Http
-    val ret = f(h)
-    h.shutdown()
-    ret
-  }
+  implicit val HttpResource: Resource[Http] = resource { _.shutdown() }
+  
+  def http[T](f: Http => T): T = withResource(new Http, f)
   
   def jsonToString(json: JValue): String =
     Printer.compact(JsonAST.render(json))
