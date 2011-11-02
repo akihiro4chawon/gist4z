@@ -56,17 +56,17 @@ trait Gists {
   // Star a gist
   // PUT /gists/:id/star
   def star(id: String)(implicit auth: SomeAuth) = 
-    http(auth((apiRoot/"gists"/id/"star").PUT) >|)
+    http(_(auth((apiRoot/"gists"/id/"star").PUT) >|))
 
   // Unstar a gist 
   // DELETE /gists/:id/star
   def unstar(id: String)(implicit auth: SomeAuth) = 
-    http(auth((apiRoot/"gists"/id/"star").DELETE) >|)
+    http(_(auth((apiRoot/"gists"/id/"star").DELETE) >|))
     
   // Check if a gist is starred
   // GET /gists/:id/star
   def isStarred(id: String)(implicit auth: SomeAuth): Validation[Exception, Boolean] =
-    http x auth(apiRoot/"gists"/id/"star") >:+ { (headers, req) =>
+    http {_ x auth(apiRoot/"gists"/id/"star") >:+ { (headers, req) =>
       (headers get "status") flatMap {_.headOption} map {_ take 3} collect {
         case "204" => Handler(req, (_, _, _) => true.success[Exception])
         case "404" => req >- { str =>
@@ -75,7 +75,7 @@ trait Gists {
               m => new StatusCode(404, m.message+": "+id).fail[Boolean]) // "Gist Not Found"
         }
       } getOrElse {req >> { _ => (new Exception("Unknown error: " + headers)).fail[Boolean]}}
-    }
+    }}
 
   // Fork a gist
   // POST /gists/:id/fork
@@ -85,5 +85,5 @@ trait Gists {
   // Delete a gist
   // DELETE /gists/:id
   def delete(id: String)(implicit auth: SomeAuth) = 
-    http(auth(apiRoot/"gists"/id).DELETE >|)
+    http(_(auth(apiRoot/"gists"/id).DELETE >|))
 }

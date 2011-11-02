@@ -9,18 +9,22 @@ import net.liftweb.json._
 import net.liftweb.json.scalaz.JsonScalaz._
 import dispatch._
 
-// TODO how to shut down http?
 package object api {
   val apiRoot = :/("api.github.com").secure
   
-  def http = new Http
+  def http[T](f: Http => T): T = {
+    val h = new Http
+    val ret = f(h)
+    h.shutdown()
+    ret
+  }
   
   def jsonToString(json: JValue): String =
     Printer.compact(JsonAST.render(json))
   
   def get[A](endpoint: Request => Request, params: QueryParam[_]*)(
       implicit auth: Auth, jsonr: JSONR[A]): Result[A] = {
-    fromJSON[A](parse(http(auth(endpoint(apiRoot)) as_str)))
+    fromJSON[A](parse(http(_(auth(endpoint(apiRoot)) as_str))))
   }
   
   def put[A](endpoint: Request => Request, params: QueryParam[_]*)(
@@ -30,12 +34,12 @@ package object api {
   
   def post[A](endpoint: Request => Request, json: JValue)(
       implicit auth: Auth, jsonr: JSONR[A]): Result[A] = {
-    fromJSON[A](parse(http(auth(endpoint(apiRoot)) << jsonToString(json) as_str)))
+    fromJSON[A](parse(http(_(auth(endpoint(apiRoot)) << jsonToString(json) as_str))))
   }
   
   def postNothing[A](endpoint: Request => Request)(
       implicit auth: Auth, jsonr: JSONR[A]): Result[A] = {
-    fromJSON[A](parse(http(auth(endpoint(apiRoot)).POST as_str)))
+    fromJSON[A](parse(http(_(auth(endpoint(apiRoot)).POST as_str))))
   }
   
   def patch[A](endpoint: Request => Request, json: JValue)(
