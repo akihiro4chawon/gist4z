@@ -12,7 +12,7 @@ import dispatch._
 package object api {
   val apiRoot = :/("api.github.com").secure
   
-  implicit val HttpResource: Resource[Http] = resource { _.shutdown() }
+  private implicit val HttpResource: Resource[Http] = resource { _.shutdown() }
   
   def http[T](f: Http => T): T = withResource(new Http, f)
   
