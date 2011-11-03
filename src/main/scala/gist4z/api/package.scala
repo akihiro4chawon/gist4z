@@ -9,6 +9,7 @@ import net.liftweb.json._
 import net.liftweb.json.scalaz.JsonScalaz._
 import dispatch._
 
+// TODO pagination abstraction
 package object api {
   val apiRoot = :/("api.github.com").secure
   
