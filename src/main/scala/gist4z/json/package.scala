@@ -9,9 +9,17 @@ import json._
 import objects._
 
 package object json extends GeneratedJSON {
+  import net.liftweb.json.scalaz.JsonScalaz.Result
+  
   implicit def filesJSONR: JSONR[Seq[File]] = jsonr {
     case JObject(fs) => fs.map{case JField(k, v) => fromJSON[File](v)}
-                          .sequence[PartialApply1Of2[ValidationNEL, Error]#Apply, File]
+                          .sequence[Result, File]
+    case x => UnexpectedJSONError(x, classOf[JObject]).fail.liftFailNel
+  }
+  
+  implicit def filesWithContentJSONR: JSONR[Seq[FileWithContent]] = jsonr {
+    case JObject(fs) => fs.map{case JField(k, v) => fromJSON[FileWithContent](v)}
+                          .sequence[Result, FileWithContent]
     case x => UnexpectedJSONError(x, classOf[JObject]).fail.liftFailNel
   }
   
