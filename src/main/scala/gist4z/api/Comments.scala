@@ -1,13 +1,7 @@
 package gist4z.api
 
-//import _root_.scalaz._
-//import _root_.scalaz.Scalaz._
-//
-//import net.liftweb.json._
 import net.liftweb.json.scalaz.JsonScalaz._
-//
-//import dispatch._
-//
+
 import gist4z.auth.{Auth, SomeAuth}
 import gist4z.objects._
 import gist4z.json._
@@ -39,5 +33,5 @@ trait Comments {
   // Delete a comment
   // DELETE /gists/comments/:id
   def remove(id: Long)(implicit auth: SomeAuth) = 
-    http(_(auth((apiRoot/"gists"/id.toString/"star").DELETE) >|))
+    delete(_/"gists/comments"/id.toString)
 }

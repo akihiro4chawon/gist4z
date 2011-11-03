@@ -61,7 +61,7 @@ trait Gists {
   // Unstar a gist 
   // DELETE /gists/:id/star
   def unstar(id: String)(implicit auth: SomeAuth) = 
-    http(_(auth((apiRoot/"gists"/id/"star").DELETE) >|))
+    delete(_/"gists"/id/"star")
     
   // Check if a gist is starred
   // GET /gists/:id/star
@@ -84,6 +84,6 @@ trait Gists {
     
   // Delete a gist
   // DELETE /gists/:id
-  def delete(id: String)(implicit auth: SomeAuth) = 
-    http(_(auth(apiRoot/"gists"/id).DELETE >|))
+  def remove(id: String)(implicit auth: SomeAuth) = 
+    delete(_/"gists"/id)
 }

@@ -43,4 +43,9 @@ package object api {
       implicit auth: Auth, jsonr: JSONR[A]): Result[A] = {
     post(endpoint andThen (_.copy(method = "PATCH")), json)
   }
+  
+  def delete(endpoint: Request => Request, params: QueryParam[_]*)(
+      implicit auth: Auth): Unit = {
+    http(_(auth(endpoint(apiRoot).DELETE) >|))
+  }
 }
