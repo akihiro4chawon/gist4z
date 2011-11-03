@@ -7,6 +7,7 @@ import gist4z.objects._
 import gist4z.json._
 import gist4z.api._
 
+// TODO add "Custom Mime Types" support
 // Gist Comments API
 trait Comments {
 
